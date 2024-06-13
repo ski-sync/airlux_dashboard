@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
+  <script>
+    window.onload = function() {
+      fetch('/data')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Data:', data);
+
+          const processedData = data.map(item => ({
+            time: item._time,
+            value: item._value,
+            index: item.table
+          }));
+
+          processedData.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+          console.log('Processed Data:', processedData);
+
+          const ctx = document.getElementById('myChart').getContext('2d');
+
+          const labels = processedData.map(item => moment(item.time).format());
+          const values = processedData.map(item => item.value);
+
+          console.log('Labels:', labels);
+          console.log('Values:', values);
+
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'My Dataset',
+                data: values,
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                x: {
+                  type: 'time',
+                  time: {
+                    unit: 'second'
+                  }
+                }
+              }
+            }
+          });
+
+          const ctx2 = document.getElementById('myChart2').getContext('2d');
+
+          new Chart(ctx2, {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'My Second Dataset',
+                data: values,
+                fill: false,
+                borderColor: 'rgb(255, 99, 132)',
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                x: {
+                  type: 'time',
+                  time: {
+                    unit: 'second'
+                  }
+                }
+              }
+            }
+          });
+        })
+        .catch(error => {
+          document.getElementById('error').textContent = error.message;
+        });
+    };
+  </script>
+</head>
+<body>
+<h1>Dashboard</h1>
+<canvas id="myChart"></canvas>
+<canvas id="myChart2"></canvas>
+<div id="error"></div>
+</body>
+</html>
